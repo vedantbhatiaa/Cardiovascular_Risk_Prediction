@@ -1,7 +1,6 @@
 # Cardiovascular Risk Score Prediction
-### MSIN0097 — Predictive Analytics | UCL MSc Business Analytics 2025–26
 
-> **Task:** Predict a continuous cardiovascular risk score (0–100) from 15 patient features using an end-to-end ML pipeline. Secondary task: classify patients into risk bands (Low / Medium / High) via derived thresholds.
+**Predict a continuous cardiovascular risk score (0–100) from 15 patient features using an end-to-end ML pipeline. Secondary task: classify patients into risk bands (Low / Medium / High) via derived thresholds.**
 
 ---
 
@@ -30,7 +29,7 @@
 | **Problem type** | Regression (primary) + derived classification |
 | **Target variable** | `heart_disease_risk_score` (continuous, 0–100) |
 | **Dataset** | Cardiovascular Risk Dataset — 5,500 patients, 15 features |
-| **Final model** | MLP Neural Network (256→128→64, ReLU, Adam, early stopping) |
+| **Final model** | MLP Neural Network |
 | **Test MAE** | 2.3806 |
 | **Test R²** | 0.9829 |
 | **Macro F1 (bands)** | 0.9014 |
@@ -42,12 +41,12 @@
 ## Repository Structure
 
 ```
-📦 cardiovascular-risk-prediction/
-├── cardiovascular_risk_prediction.ipynb   # Main notebook — Steps 1–6
-├── cardiovascular_risk_dataset.csv        # Dataset
-├── requirements.txt                       # Python dependencies
-├── README.md                              # This file
-├── images/                                # Visualisations referenced in README
+cardiovascular-risk-prediction/
+├── cardiovascular_risk_prediction.ipynb   
+├── cardiovascular_risk_dataset.csv      
+├── requirements.txt                       
+├── README.md                            
+├── images/                                
 │   ├── img_01_target_distribution.png
 │   ├── img_02_correlation_heatmap.png
 │   ├── img_04_stratification_check.png
@@ -284,27 +283,6 @@ The full model card below summarises test metrics, the three-way generalisation 
 
 ---
 
-## Agent Tooling
-
-This project used Claude (Anthropic) as an AI coding assistant throughout Steps 1–6.
-
-**Agent contributions:** scaffolding notebook structure, generating baseline pipelines, debugging runtime errors, drafting markdown, producing visualisations.
-
-**Verification approach:** every agent output was reviewed before acceptance. Key decisions, modifications, and rejections are documented in:
-- `appendix/Assessment_Information_Coursework_2025.docx` — step-by-step decision register (14 entries, 1a–5a)
-- `appendix/Unified_Session_Log.docx` — full session log (39 rows, Steps 1–6)
-
-**Agent mistakes caught and corrected:**
-
-| # | Mistake | Fix |
-|---|---------|-----|
-| 1 | `StratifiedKFold` used in `RandomizedSearchCV` for regression target — TypeError on execution | Replaced with `KFold` (Cells 82, 85) |
-| 2 | MLP trained on unscaled `X_train_tree` despite agent's own markdown flagging scale-sensitivity | `StandardScaler` applied to tree arrays before MLP (Cell 69) |
-| 3 | XGBoost declared winner without MLP included in the comparison — 10% CV MAE gap missed | Winner overridden to MLP (Cell 88, decision log entry 5a) |
-| 4 | `pd.Categorical` dtype passed to sklearn metrics — silent wrong output | `.astype(str)` fix (Cell 107) |
-| 5 | Test MAE stored in Val MAE column — misleading presentation | Dedicated `Test MAE` column added (Cell 112) |
-
----
 
 ## References
 
