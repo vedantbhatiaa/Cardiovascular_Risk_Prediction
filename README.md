@@ -12,10 +12,14 @@
 4. [Environment Setup](#environment-setup)
 5. [How to Run](#how-to-run)
 6. [Notebook Structure](#notebook-structure)
-7. [Final Results](#final-results)
-8. [Key Design Decisions](#key-design-decisions)
-9. [Agent Tooling](#agent-tooling)
-10. [References](#references)
+7. [Exploratory Data Analysis](#exploratory-data-analysis)
+8. [Data Preparation](#data-preparation)
+9. [Model Exploration & Selection](#model-exploration--selection)
+10. [Error Analysis](#error-analysis)
+11. [Final Results](#final-results)
+12. [Key Design Decisions](#key-design-decisions)
+13. [Agent Tooling](#agent-tooling)
+14. [References](#references)
 
 ---
 
@@ -27,10 +31,10 @@
 | **Target variable** | `heart_disease_risk_score` (continuous, 0–100) |
 | **Dataset** | Cardiovascular Risk Dataset — 5,500 patients, 15 features |
 | **Final model** | MLP Neural Network (256→128→64, ReLU, Adam, early stopping) |
-| **Test MAE** | ~2.38 risk-score points |
-| **Test R²** | ~0.98 |
-| **Macro F1 (bands)** | ~0.90 |
-| **High-risk Recall** | ~0.93 |
+| **Test MAE** | 2.3806 |
+| **Test R²** | 0.9829 |
+| **Macro F1 (bands)** | 0.9014 |
+| **High-risk Recall** | 0.8967 |
 | **Split** | 70% train / 15% val / 15% test — stratified by risk band |
 
 ---
@@ -39,21 +43,30 @@
 
 ```
 📦 cardiovascular-risk-prediction/
-├── cardiovascular_risk_prediction.ipynb   
-├── cardiovascular_risk_dataset.csv        
-├── requirements.txt                       
-├── README.md                             
+├── cardiovascular_risk_prediction.ipynb   # Main notebook — Steps 1–6
+├── cardiovascular_risk_dataset.csv        # Dataset
+├── requirements.txt                       # Python dependencies
+├── README.md                              # This file
+├── images/                                # Visualisations referenced in README
+│   ├── img_01_target_distribution.png
+│   ├── img_02_correlation_heatmap.png
+│   ├── img_04_stratification_check.png
+│   ├── img_05_mlp_diagnostics.png
+│   ├── img_06_model_comparison.png
+│   ├── img_09_error_by_band.png
+│   ├── img_11_confusion_matrix.png
+│   ├── img_12_endtoend_comparison.png
+│   └── img_13_model_card.png
 └── appendix/
-    ├── Unified_Session_Log.docx           
-    └── Assessment_Information_Coursework_2025.docx 
+    ├── Unified_Session_Log.docx
+    └── Assessment_Information_Coursework_2025.docx
 ```
 
 ---
 
 ## Dataset
 
-**File:** `cardiovascular_risk_dataset.csv`  
-**Source:** Kaggle — Cardiovascular Risk Dataset (synthetic)  
+**File:** `cardiovascular_risk_dataset.csv`
 **Rows:** 5,500 | **Columns:** 17 (15 features + 1 target + 1 dropped)
 
 | Column | Type | Notes |
@@ -61,8 +74,8 @@
 | `heart_disease_risk_score` | float (0–100) | **Target variable** |
 | `risk_category` | categorical | Dropped — algorithmic bucketing of target (leakage) |
 | `Patient_ID` | integer | Dropped — identifier only |
-| `systolic_bp`, `diastolic_bp` | numeric | Strongest predictors (r=0.90, r=0.81) |
-| `cholesterol_mg_dl` | numeric | r=0.85 with target |
+| `systolic_bp`, `diastolic_bp` | numeric | Strongest predictors (r=0.901, r=0.813) |
+| `cholesterol_mg_dl` | numeric | r=0.852 with target |
 | `smoking_status` | ordinal | Never / Former / Current → encoded 0/1/2 |
 | `family_history_heart_disease` | binary | No/Yes → encoded 0/1 |
 | `alcohol_units_per_week` | numeric | Right-skewed — Winsorised at 99th pct for linear pipeline |
@@ -108,8 +121,6 @@ python -c "import pandas, numpy, sklearn, xgboost, statsmodels; print('All packa
 
 ## How to Run
 
-### Full notebook (recommended)
-
 ```bash
 jupyter notebook cardiovascular_risk_prediction.ipynb
 ```
@@ -133,47 +144,127 @@ Then **run all cells in order** (`Kernel → Restart & Run All`).
 
 ## Notebook Structure
 
-The notebook follows the six required steps from the brief:
-
 | Step | Cells | Description |
 |------|-------|-------------|
 | **Step 1** | 1–2 | Problem framing: target definition, metrics, assumptions |
 | **Step 2** | 3–28 | EDA: distributions, outliers, correlations, boundary region analysis |
 | **Step 3** | 29–55 | Preprocessing: encoding, age_bmi engineering, VIF, stratified split, pipelines, leakage guards |
-| **Step 4** | 56–77 | Model exploration: Linear Regression, Random Forest, XGBoost, MLP (+ scaling fix) |
-| **Step 5** | 78–114 | Tuning (RandomizedSearchCV), error analysis (6 sub-sections), test evaluation, three-way comparison |
+| **Step 4** | 56–77 | Model exploration: Linear Regression, Random Forest, XGBoost, MLP |
+| **Step 5** | 78–114 | Tuning, error analysis (6 sub-sections), test evaluation, three-way comparison |
 | **Step 6** | 115–121 | Final model selection rationale, limitations, model card |
+
+---
+
+## Exploratory Data Analysis
+
+### Target Distribution
+
+The target `heart_disease_risk_score` spans 0–100 with a roughly uniform distribution and mild right skew (skew=0.21). Mean=37.5, Median=36.7. The Q-Q plot confirms the score is not normally distributed — justifying non-parametric models over purely linear ones. The two dotted lines mark the classification thresholds (25 and 55) that define Low/Medium/High bands.
+
+![Target Distribution](images/img_01_target_distribution.png)
+
+---
+
+### Feature Correlations
+
+`systolic_bp` (r=0.901), `cholesterol_mg_dl` (r=0.852), and `diastolic_bp` (r=0.813) are the dominant risk predictors. Protective factors include `diet_quality_score` (r=−0.531) and `physical_activity_hours_per_week` (r=−0.520). The full correlation matrix reveals multicollinearity between the blood pressure pair — addressed by dropping `diastolic_bp` from the linear pipeline after VIF analysis confirmed `systolic_bp` VIF=11.2.
+
+![Correlation Heatmap](images/img_02_correlation_heatmap.png)
+
+---
+
+## Data Preparation
+
+### Stratification Verification
+
+The 70/15/15 split was stratified by risk band. The right panel confirms Low (~33%), Medium (~41%), and High (~25%) proportions are identical across train, val, and test — no accidental class skew in evaluation. The overlapping density curves (left) confirm the splits share the same underlying score distribution.
+
+![Stratification Check](images/img_04_stratification_check.png)
+
+---
+
+## Model Exploration & Selection
+
+### All Four Models Compared
+
+Four models were trained in Step 4 using a consistent 5-fold CV harness. MLP consistently outperformed all candidates on every metric simultaneously — a clean, unambiguous result.
+
+![Model Comparison](images/img_06_model_comparison.png)
+
+> MLP wins across all three panels: lowest Val MAE (2.400), highest Val R² (0.984), lowest CV MAE (2.358) with the tightest error bars (CV Std=0.046). XGBoost — the other strong candidate — was 10% worse on CV MAE (2.673) with twice the variance (0.094). Tuned XGBoost and RF (Step 5) still did not close this gap.
+
+---
+
+### MLP Training Behaviour
+
+The loss curve shows rapid convergence in the first 5 epochs with a clean plateau thereafter. Early stopping triggered at epoch 39 — well before the 500-iteration limit — confirming the model learned without overfitting. The predicted vs actual scatter tracks the diagonal tightly across the full 0–100 range. Residuals are centred near zero (Mean=0.28, Std=3.08) with no visible patterns.
+
+![MLP Diagnostics](images/img_05_mlp_diagnostics.png)
+
+---
+
+## Error Analysis
+
+### Error by Risk Band
+
+Low-risk patients are predicted most accurately (MAE=2.017). Medium and High bands show slightly elevated MAE (~2.59) — largely attributable to patients near the classification boundaries. The systematic bias panel shows High-risk patients are marginally underpredicted (+1.20 mean residual), a structural property when predictions cluster near the 55-point threshold. The error distribution by band (right) shows comparable spread across all three — no band is systematically worse.
+
+![Error by Risk Band](images/img_09_error_by_band.png)
 
 ---
 
 ## Final Results
 
-### Model comparison (validation set)
+### End-to-End Model Comparison — All Phases
 
-| Model | Val MAE | CV MAE | CV Std | Val R² |
-|-------|---------|--------|--------|--------|
-| Linear Regression | 3.2660 | 3.2884 | 0.0788 | 0.9683 |
-| Random Forest | 3.2545 | 3.3810 | 0.1290 | 0.9710 |
-| XGBoost | 2.6499 | 2.6730 | 0.0943 | 0.9818 |
-| **MLP (Neural Network)** ✓ | **2.3998** | **2.3577** | **0.0455** | **0.9842** |
-| XGBoost (Tuned) | 2.6629 | 2.5973 | 0.0585 | 0.9820 |
-| Random Forest (Tuned) | 3.2459 | 3.3197 | 0.0643 | 0.9712 |
+The chart below summarises all 6 models across exploration, tuning, and test phases. MLP (green) is the only model with a bar in the Test MAE panel — evaluated exactly once on the held-out test set. All other models show grey bars, confirming the test set was never touched during model selection.
 
-### Final test set (held-out, evaluated once)
+![End-to-End Comparison](images/img_12_endtoend_comparison.png)
+
+---
+
+### Confusion Matrix — Test Set (Derived Classification)
+
+Applying confirmed thresholds (Low: 0–24.9, Medium: 25–54.9, High: 55–100) to MLP's continuous predictions on 825 held-out patients:
+
+![Confusion Matrix](images/img_11_confusion_matrix.png)
+
+| Band | Precision | Recall | F1 | Support |
+|------|-----------|--------|----|---------|
+| Low | 0.93 | 0.83 | 0.88 | 276 |
+| Medium | 0.88 | 0.92 | 0.90 | 336 |
+| **High** | **0.96** | **0.90** | **0.93** | 213 |
+| **Macro avg** | **0.92** | **0.88** | **0.90** | 825 |
+
+Zero Low→High or High→Low misclassifications. All errors occur at adjacent band boundaries — consistent with the structural boundary region (±5 of thresholds) identified in EDA.
+
+---
+
+### Model Card
+
+The full model card below summarises test metrics, the three-way generalisation check, band classification heatmap, error CDF, training loss curve, and MLP permutation feature importances in a single view.
+
+![Model Card](images/img_13_model_card.png)
+
+**Three-way generalisation check:** Val MAE 2.3998 ≈ CV MAE 2.3577 ≈ Test MAE 2.3806 — all gaps <0.05. Confirms the model generalises and the validation set was not implicitly overfit during selection.
+
+**Permutation importance note:** MLP has no intrinsic feature importances. Permutation importance on the val set reveals `age` (6.70) as the top predictor — diverging from tree-based MDI rankings where `systolic_bp` leads. This reflects MLP's learned interaction structure rather than split-based salience.
+
+**Error CDF:** 80% of test patients are predicted within ~4 risk score points. The 95th percentile error is ~7 points — well within clinically manageable range for a screening tool.
+
+---
+
+### Final Test Set Metrics
 
 | Metric | Value |
 |--------|-------|
-| MAE | 2.3806 |
-| RMSE | 3.0873 |
-| R² | 0.9829 |
-| Macro F1 (derived bands) | 0.9014 |
-| High-risk Recall | 0.8967 |
-| High-risk Precision | 0.9598 |
-| High-risk F1 | 0.9272 |
-
-### Three-way generalisation check
-
-Val MAE 2.3998 ≈ CV MAE 2.3577 ≈ Test MAE 2.3806 — gap within noise (<0.05). Confirms model generalises and validation set was not implicitly overfit during model selection.
+| MAE | **2.3806** |
+| RMSE | **3.0873** |
+| R² | **0.9829** |
+| Macro F1 (derived bands) | **0.9014** |
+| High-risk Recall | **0.8967** |
+| High-risk Precision | **0.9598** |
+| High-risk F1 | **0.9272** |
 
 ---
 
@@ -181,18 +272,39 @@ Val MAE 2.3998 ≈ CV MAE 2.3577 ≈ Test MAE 2.3806 — gap within noise (<0.05
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| Task type | Regression (primary) | `risk_category` is algorithmic bucketing of score — using it as target = if-else rule learning |
+| Task type | Regression (primary) | `risk_category` is algorithmic bucketing of score — predicting it = learning an if-else rule |
 | `risk_category` | Dropped entirely | Direct leakage of target variable |
-| Feature engineering | `age_bmi` interaction | r=0.838 with target, outperforms age (0.69) and bmi (0.71) individually |
+| Feature engineering | `age_bmi` interaction | r=0.838 with target, outperforms age (0.694) and bmi (0.713) individually |
 | `age_bmi` scope | Tree pipeline only | VIF=61.3 — unsafe for linear models |
 | `alcohol_units_per_week` | Winsorised at 99th pct | 3.9% outliers — real population values, not errors |
-| CV strategy (tuning) | KFold(5) | StratifiedKFold is incompatible with continuous regression targets in RandomizedSearchCV |
-| CV strategy (exploration) | StratifiedKFold(5) | Manual fold loop — stratification on risk bands for stable band distributions |
-| Winner model | MLP (Neural Network) | Outperforms all candidates on Val MAE, CV MAE, CV Std, and Val R² |
-| MLP inputs | `X_train_tree_scaled` | MLP requires scaled inputs — StandardScaler fitted on training data only (no leakage) |
+| CV strategy (tuning) | KFold(5) | StratifiedKFold incompatible with continuous targets in RandomizedSearchCV |
+| CV strategy (exploration) | StratifiedKFold(5) | Manual fold loop — ensures stable risk band distributions across folds |
+| Winner model | MLP (Neural Network) | Outperforms all candidates on every metric; holds on held-out test set |
+| MLP inputs | `X_train_tree_scaled` | MLPs require scaled inputs — StandardScaler fitted on training data only (no leakage) |
 
 ---
 
+## Agent Tooling
+
+This project used Claude (Anthropic) as an AI coding assistant throughout Steps 1–6.
+
+**Agent contributions:** scaffolding notebook structure, generating baseline pipelines, debugging runtime errors, drafting markdown, producing visualisations.
+
+**Verification approach:** every agent output was reviewed before acceptance. Key decisions, modifications, and rejections are documented in:
+- `appendix/Assessment_Information_Coursework_2025.docx` — step-by-step decision register (14 entries, 1a–5a)
+- `appendix/Unified_Session_Log.docx` — full session log (39 rows, Steps 1–6)
+
+**Agent mistakes caught and corrected:**
+
+| # | Mistake | Fix |
+|---|---------|-----|
+| 1 | `StratifiedKFold` used in `RandomizedSearchCV` for regression target — TypeError on execution | Replaced with `KFold` (Cells 82, 85) |
+| 2 | MLP trained on unscaled `X_train_tree` despite agent's own markdown flagging scale-sensitivity | `StandardScaler` applied to tree arrays before MLP (Cell 69) |
+| 3 | XGBoost declared winner without MLP included in the comparison — 10% CV MAE gap missed | Winner overridden to MLP (Cell 88, decision log entry 5a) |
+| 4 | `pd.Categorical` dtype passed to sklearn metrics — silent wrong output | `.astype(str)` fix (Cell 107) |
+| 5 | Test MAE stored in Val MAE column — misleading presentation | Dedicated `Test MAE` column added (Cell 112) |
+
+---
 
 ## References
 
