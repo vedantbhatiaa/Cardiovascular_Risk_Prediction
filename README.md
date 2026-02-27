@@ -39,13 +39,13 @@
 
 ```
 📦 cardiovascular-risk-prediction/
-├── cardiovascular_risk_prediction.ipynb   # Main notebook — Steps 1–6
-├── cardiovascular_risk_dataset.csv        # Dataset (see Dataset section)
-├── requirements.txt                       # Python dependencies
-├── README.md                              # This file
+├── cardiovascular_risk_prediction.ipynb   
+├── cardiovascular_risk_dataset.csv        
+├── requirements.txt                       
+├── README.md                             
 └── appendix/
-    ├── Unified_Session_Log.docx           # Agent usage log + decision register
-    └── Assessment_Information_Coursework_2025.docx  # Step-by-step decision log
+    ├── Unified_Session_Log.docx           
+    └── Assessment_Information_Coursework_2025.docx 
 ```
 
 ---
