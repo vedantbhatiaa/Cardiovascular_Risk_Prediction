@@ -152,26 +152,28 @@ The notebook follows the six required steps from the brief:
 
 | Model | Val MAE | CV MAE | CV Std | Val R² |
 |-------|---------|--------|--------|--------|
-| Linear Regression | 3.266 | 3.288 | 0.079 | 0.968 |
-| Random Forest | 3.255 | 3.381 | 0.129 | 0.971 |
-| XGBoost | 2.650 | 2.673 | 0.094 | 0.982 |
-| **MLP (Neural Network)** ✓ | **2.400** | **2.358** | **0.046** | **0.984** |
-| XGBoost (Tuned) | 2.663 | 2.597 | 0.059 | 0.982 |
-| Random Forest (Tuned) | 3.246 | 3.197 | 0.064 | 0.971 |
+| Linear Regression | 3.2660 | 3.2884 | 0.0788 | 0.9683 |
+| Random Forest | 3.2545 | 3.3810 | 0.1290 | 0.9710 |
+| XGBoost | 2.6499 | 2.6730 | 0.0943 | 0.9818 |
+| **MLP (Neural Network)** ✓ | **2.3998** | **2.3577** | **0.0455** | **0.9842** |
+| XGBoost (Tuned) | 2.6629 | 2.5973 | 0.0585 | 0.9820 |
+| Random Forest (Tuned) | 3.2459 | 3.3197 | 0.0643 | 0.9712 |
 
 ### Final test set (held-out, evaluated once)
 
 | Metric | Value |
 |--------|-------|
-| MAE | ~2.38 |
-| RMSE | ~3.09 |
-| R² | ~0.98 |
-| Macro F1 (derived bands) | ~0.90 |
-| High-risk Recall | ~0.93 |
+| MAE | 2.3806 |
+| RMSE | 3.0873 |
+| R² | 0.9829 |
+| Macro F1 (derived bands) | 0.9014 |
+| High-risk Recall | 0.8967 |
+| High-risk Precision | 0.9598 |
+| High-risk F1 | 0.9272 |
 
 ### Three-way generalisation check
 
-Val ≈ CV ≈ Test — confirms model generalises and validation set was not implicitly overfit during model selection.
+Val MAE 2.3998 ≈ CV MAE 2.3577 ≈ Test MAE 2.3806 — gap within noise (<0.05). Confirms model generalises and validation set was not implicitly overfit during model selection.
 
 ---
 
