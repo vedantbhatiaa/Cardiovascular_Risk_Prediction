@@ -44,7 +44,8 @@
 cardiovascular-risk-prediction/
 ├── cardiovascular_risk_prediction.ipynb   
 ├── cardiovascular_risk_dataset.csv      
-├── requirements.txt                       
+├── requirements.txt
+├── project_report.docx                       
 ├── README.md                            
 ├── images/                                
 │   ├── img_01_target_distribution.png
