@@ -45,7 +45,7 @@ cardiovascular-risk-prediction/
 ├── cardiovascular_risk_prediction.ipynb   
 ├── cardiovascular_risk_dataset.csv      
 ├── requirements.txt
-├── project_report.docx                       
+├── project_report.pdf                       
 ├── README.md                            
 ├── images/                                
 │   ├── img_01_target_distribution.png
@@ -58,8 +58,7 @@ cardiovascular-risk-prediction/
 │   ├── img_12_endtoend_comparison.png
 │   └── img_13_model_card.png
 └── appendix/
-    ├── Unified_Session_Log.docx
-    └── Assessment_Information_Coursework_2025.docx
+    ├── Session_Log.pdf
 ```
 
 ---
