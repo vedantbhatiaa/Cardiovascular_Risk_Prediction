@@ -1,7 +1,6 @@
 # Cardiovascular Risk Score Prediction
 
 **Predict a continuous cardiovascular risk score (0–100) from 15 patient features using an end-to-end ML pipeline. Secondary task: classify patients into risk bands (Low / Medium / High) via derived thresholds.**
-
 ---
 
 ## Table of Contents
